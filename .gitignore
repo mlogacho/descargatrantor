@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+prueba_descargas/
+downloads/
+error_screenshot.png
+.DS_Store

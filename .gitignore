@@ -5,3 +5,7 @@ prueba_descargas/
 downloads/
 error_screenshot.png
 .DS_Store
+
+# Environment
+.env
+

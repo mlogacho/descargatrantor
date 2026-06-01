@@ -20,35 +20,18 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy on EC2
+      - name: Deploy scraper files to EC2
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            main.py scraper.py requirements.txt \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Luki-Play-OTT/scraper/
+
+      - name: Restart scraper on EC2
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
             set -e
-
-            # ── Clonar o actualizar repo ────────────────────────────────
-            if [ ! -d ~/descargatrantor ]; then
-              git clone https://github.com/mlogacho/descargatrantor.git ~/descargatrantor
-            else
-              cd ~/descargatrantor && git pull
-            fi
-
-            cd ~/descargatrantor
-
-            # ── Python deps ────────────────────────────────────────────
-            pip3 install -r requirements.txt --quiet
-
-            # ── Playwright Chromium ────────────────────────────────────
-            python3 -m playwright install chromium --with-deps
-
-            # ── PM2: iniciar o recargar ────────────────────────────────
-            if pm2 list | grep -q "descargatrantor"; then
-              pm2 reload descargatrantor
-            else
-              pm2 start "uvicorn main:app --host 0.0.0.0 --port 8001" \
-                --name descargatrantor \
-                --interpreter python3
-              pm2 save
-            fi
-
-            echo "Deploy descargatrantor OK"
+            cd ~/Luki-Play-OTT/scraper
+            .venv/bin/pip install -r requirements.txt --quiet
+            pm2 restart luki-scraper --update-env
+            echo "Deploy luki-scraper OK"
           ENDSSH
